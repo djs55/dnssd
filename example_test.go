@@ -6,7 +6,7 @@ import (
 	"net"
 	"net/http"
 
-	"github.com/andrewtj/dnssd"
+	"github.com/djs55/dnssd"
 	"github.com/miekg/dns"
 )
 
