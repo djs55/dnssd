@@ -6,7 +6,7 @@ import (
 	"net"
 	"net/http"
 
-	"github.com/andrewtj/dnssd"
+	"github.com/djs55/dnssd"
 	"github.com/miekg/dns"
 )
 
@@ -113,7 +113,7 @@ func ExampleResolveOp() {
 	op.Stop()
 }
 
-func ExampleQueryCallbackFunc(op *dnssd.QueryOp, err error, add bool, interfaceIndex int, fullname string, rrtype, rrclass uint16, rdata []byte, ttl uint32) {
+func ExampleQueryCallbackFunc(op *dnssd.QueryOp, err error, add, more bool, interfaceIndex int, fullname string, rrtype, rrclass uint16, rdata []byte, ttl uint32) {
 	if err != nil {
 		// op is now inactive
 		log.Printf("Query operation failed: %s", err)
@@ -126,7 +126,7 @@ func ExampleQueryCallbackFunc(op *dnssd.QueryOp, err error, add bool, interfaceI
 	log.Printf("Query operation %s %s/%d/%d/%v (TTL: %d) on interface %d", change, fullname, rrtype, rrclass, rdata, ttl, interfaceIndex)
 }
 
-func ExampleQueryCallbackFunc_unpackRR(op *dnssd.QueryOp, err error, add bool, interfaceIndex int, fullname string, rrtype, rrclass uint16, rdata []byte, ttl uint32) {
+func ExampleQueryCallbackFunc_unpackRR(op *dnssd.QueryOp, err error, add, more bool, interfaceIndex int, fullname string, rrtype, rrclass uint16, rdata []byte, ttl uint32) {
 	// Demonstrates constructing a resource record and unpacking it using
 	// Miek Gieben's dns package (https://github.com/miekg/dns/).
 

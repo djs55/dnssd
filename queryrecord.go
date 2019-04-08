@@ -9,7 +9,7 @@ import (
 // Results may be cached for ttl seconds. After ttl seconds the result should be discarded.
 // Alternatively the operation may be left running in which case the result can be considered valid
 // until a callback indicates otherwise.
-type QueryCallbackFunc func(op *QueryOp, err error, add bool, interfaceIndex int, fullname string, rrtype, rrclass uint16, rdata []byte, ttl uint32)
+type QueryCallbackFunc func(op *QueryOp, err error, add, more bool, interfaceIndex int, fullname string, rrtype, rrclass uint16, rdata []byte, ttl uint32)
 
 // QueryOp represents a query for a specific name, class and type.
 type QueryOp struct {
@@ -141,7 +141,7 @@ func (o *QueryOp) handleError(e error) {
 	}
 	o.started = false
 	pollServer.removePollOp(o)
-	queueCallback(func() { o.callback(o, e, false, 0, "", 0, 0, nil, 0) })
+	queueCallback(func() { o.callback(o, e, false, false, 0, "", 0, 0, nil, 0) })
 }
 
 func dnssdQueryCallback(sdRef unsafe.Pointer, flags, interfaceIndex uint32, err int32, fullname unsafe.Pointer, rrtype, rrclass, rdlen uint16, rdataptr unsafe.Pointer, ttl uint32, ctx uintptr) {
@@ -154,6 +154,7 @@ func dnssdQueryCallback(sdRef unsafe.Pointer, flags, interfaceIndex uint32, err 
 		o.handleError(e)
 	} else {
 		a := flags&_FlagsAdd != 0
+		m := flags&_FlagsMoreComing != 0
 		i := int(interfaceIndex)
 		f := cStringToString(fullname)
 		var rdata []byte
@@ -162,6 +163,6 @@ func dnssdQueryCallback(sdRef unsafe.Pointer, flags, interfaceIndex uint32, err 
 			rdata = make([]byte, rdlen)
 			copy(rdata, s)
 		}
-		queueCallback(func() { o.callback(o, e, a, i, f, rrtype, rrclass, rdata, ttl) })
+		queueCallback(func() { o.callback(o, e, a, m, i, f, rrtype, rrclass, rdata, ttl) })
 	}
 }

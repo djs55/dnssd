@@ -56,7 +56,8 @@ const InterfaceIndexAny = 0
 const InterfaceIndexLocalOnly = int(^uint(0) >> 1)
 
 const (
-	_FlagsAdd             uint32 = 0x2
+	_FlagsMoreComing      uint32 = 0x1
+	_FlagsAdd                    = 0x2
 	_FlagsNoAutoRename           = 0x8
 	_FlagsShareConnection        = 0x4000
 )
