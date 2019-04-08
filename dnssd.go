@@ -1,7 +1,5 @@
 // Package dnssd implements a wrapper for Apple's C DNS Service Discovery API.
 //
-//   This package broke with Go 1.6: https://github.com/andrewtj/dnssd/issues/5
-//
 // The DNS Service Discovery API is part of the Apple Bonjour zero
 // configuration networking stack. The API allows for network services to be
 // registered, browsed and resolved without configuration via multicast DNS
@@ -63,12 +61,19 @@ const (
 	_FlagsShareConnection        = 0x4000
 )
 
+var (
+	ops      = make(map[uintptr]interface{})
+	opID     uintptr
+	opIDLock sync.RWMutex
+)
+
 type baseOp struct {
 	m              sync.Mutex
 	shared         bool
 	started        bool
 	interfaceIndex int
 	flags          uint32
+	id             uintptr
 }
 
 var callbackQueueState struct {
@@ -141,6 +146,28 @@ func (o *baseOp) interfaceIndexC() uint32 {
 		return ^uint32(0)
 	}
 	return uint32(o.interfaceIndex)
+}
+
+func (o *baseOp) create(op interface{}) {
+	opIDLock.Lock()
+	defer opIDLock.Unlock()
+
+	opID++
+	o.id = opID
+	ops[o.id] = op
+}
+
+func (o *baseOp) destroy() {
+	opIDLock.Lock()
+	defer opIDLock.Unlock()
+
+	delete(ops, o.id)
+}
+
+func getOpByID(id uintptr) interface{} {
+	opIDLock.RLock()
+	defer opIDLock.RUnlock()
+	return ops[id]
 }
 
 func (o *baseOp) init(sharedref uintptr) (ref uintptr, err error) {
