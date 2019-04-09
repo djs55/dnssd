@@ -59,6 +59,7 @@ const (
 	_FlagsMoreComing      uint32 = 0x1
 	_FlagsAdd                    = 0x2
 	_FlagsNoAutoRename           = 0x8
+	_FlagsIntermediates          = 0x1000
 	_FlagsShareConnection        = 0x4000
 )
 

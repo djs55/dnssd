@@ -16,23 +16,25 @@ type QueryOp struct {
 	baseOp
 	name            string
 	rrtype, rrclass uint16
+	intermediates   bool
 	callback        QueryCallbackFunc
 }
 
 // NewQueryOp creates a new QueryOp with the associated parameters set.
-func NewQueryOp(interfaceIndex int, name string, rrtype, rrclass uint16, f QueryCallbackFunc) *QueryOp {
+func NewQueryOp(interfaceIndex int, name string, rrtype, rrclass uint16, intermediates bool, f QueryCallbackFunc) *QueryOp {
 	op := &QueryOp{}
 	op.SetInterfaceIndex(interfaceIndex)
 	op.SetName(name)
 	op.SetType(rrtype)
 	op.SetClass(rrclass)
+	op.SetIntermediates(intermediates)
 	op.SetCallback(f)
 	return op
 }
 
 // StartQueryOp returns the equivalent of calling NewQueryOp and Start.
-func StartQueryOp(interfaceIndex int, name string, rrtype, rrclass uint16, f QueryCallbackFunc) (*QueryOp, error) {
-	op := NewQueryOp(interfaceIndex, name, rrtype, rrclass, f)
+func StartQueryOp(interfaceIndex int, name string, rrtype, rrclass uint16, intermediates bool, f QueryCallbackFunc) (*QueryOp, error) {
+	op := NewQueryOp(interfaceIndex, name, rrtype, rrclass, intermediates, f)
 	return op, op.Start()
 }
 
@@ -90,6 +92,24 @@ func (o *QueryOp) SetClass(c uint16) error {
 	return nil
 }
 
+// Intermediates returns whether "intermediate" DNS records like CNAMES will be returned.
+func (o *QueryOp) Intermediates() bool {
+	o.m.Lock()
+	defer o.m.Unlock()
+	return o.intermediates
+}
+
+// SetIntermediates sets whether "intermediate" DNS records like CNAMES will be returned.
+func (o *QueryOp) SetIntermediates(intermediates bool) error {
+	o.m.Lock()
+	defer o.m.Unlock()
+	if o.started {
+		return ErrStarted
+	}
+	o.intermediates = intermediates
+	return nil
+}
+
 // SetCallback sets the function to call when an error occurs or a record is added or removed.
 func (o *QueryOp) SetCallback(f QueryCallbackFunc) error {
 	o.m.Lock()
@@ -119,6 +139,7 @@ func (o *QueryOp) Start() error {
 func (o *QueryOp) init(sharedref uintptr) (ref uintptr, err error) {
 	ref = sharedref
 	o.setFlag(_FlagsShareConnection, ref != 0)
+	o.setFlag(_FlagsIntermediates, o.intermediates)
 	if err = queryStart(&ref, o.flags, o.interfaceIndexC(), o.name, o.rrtype, o.rrclass, o.id); err != nil {
 		ref = 0
 	}
