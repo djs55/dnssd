@@ -157,6 +157,8 @@ func (o *QueryOp) Stop() {
 }
 
 func (o *QueryOp) handleError(e error) {
+	o.m.Lock()
+	defer o.m.Unlock()
 	if !o.started {
 		return
 	}
